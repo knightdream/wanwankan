@@ -14,6 +14,7 @@ namespace WanWanKan.UI
         [Header("地图面板")]
         [SerializeField] private GameObject mapPanel;
         [SerializeField] private Button closeButton;
+        [SerializeField] private Button openMapButton;
         [SerializeField] private TextMeshProUGUI floorText;
 
         [Header("地图容器")]
@@ -23,15 +24,23 @@ namespace WanWanKan.UI
 
         [Header("房间节点设置")]
         [SerializeField] private float roomNodeSize = 60f;
-        [SerializeField] private float roomSpacing = 150f;
+        [SerializeField] private float roomSpacing = 120f;
 
         [Header("房间状态颜色")]
         [SerializeField] private Color startRoomColor = new Color(0.2f, 0.8f, 0.2f);      // 绿色
-        [SerializeField] private Color currentRoomColor = new Color(1f, 0.8f, 0f);      // 金色
-        [SerializeField] private Color visitedRoomColor = new Color(0.6f, 0.6f, 0.6f);  // 灰色
-        [SerializeField] private Color unvisitedRoomColor = new Color(0.3f, 0.3f, 0.8f); // 蓝色
-        [SerializeField] private Color bossRoomColor = new Color(0.8f, 0.2f, 0.2f);    // 红色
-        [SerializeField] private Color accessibleRoomColor = new Color(1f, 1f, 0.5f);   // 浅黄色
+        [SerializeField] private Color currentRoomColor = new Color(1f, 0.8f, 0f);        // 金色
+        [SerializeField] private Color visitedRoomColor = new Color(0.5f, 0.5f, 0.5f);    // 灰色
+        [SerializeField] private Color unvisitedRoomColor = new Color(0.3f, 0.3f, 0.8f);  // 蓝色
+        [SerializeField] private Color bossRoomColor = new Color(0.8f, 0.2f, 0.2f);       // 红色
+        [SerializeField] private Color accessibleRoomColor = new Color(1f, 1f, 0.5f);     // 浅黄色
+        
+        [Header("房间类型颜色")]
+        [SerializeField] private Color shopRoomColor = new Color(0.2f, 0.7f, 0.9f);       // 青色
+        [SerializeField] private Color treasureRoomColor = new Color(1f, 0.85f, 0.3f);    // 金黄色
+        [SerializeField] private Color restRoomColor = new Color(0.6f, 0.9f, 0.6f);       // 浅绿色
+        [SerializeField] private Color eventRoomColor = new Color(0.7f, 0.5f, 0.9f);      // 紫色
+        [SerializeField] private Color sacrificeRoomColor = new Color(0.6f, 0.1f, 0.3f);  // 暗红色
+        [SerializeField] private Color secretRoomColor = new Color(0.9f, 0.9f, 0.9f);     // 白色
 
         [Header("快捷键")]
         [SerializeField] private KeyCode toggleKey = KeyCode.M;
@@ -56,6 +65,12 @@ namespace WanWanKan.UI
             if (closeButton != null)
             {
                 closeButton.onClick.AddListener(CloseMap);
+            }
+
+            // 设置打开地图按钮
+            if (openMapButton != null)
+            {
+                openMapButton.onClick.AddListener(OpenMap);
             }
         }
 
@@ -92,6 +107,12 @@ namespace WanWanKan.UI
                 isMapOpen = true;
                 RefreshMap();
             }
+            
+            // 隐藏打开地图按钮
+            if (openMapButton != null)
+            {
+                openMapButton.gameObject.SetActive(false);
+            }
         }
 
         /// <summary>
@@ -103,6 +124,12 @@ namespace WanWanKan.UI
             {
                 mapPanel.SetActive(false);
                 isMapOpen = false;
+            }
+            
+            // 显示打开地图按钮
+            if (openMapButton != null)
+            {
+                openMapButton.gameObject.SetActive(true);
             }
         }
 
@@ -164,16 +191,43 @@ namespace WanWanKan.UI
                 return;
             }
 
+            // 计算地图边界以便居中
+            Vector2Int minPos = new Vector2Int(int.MaxValue, int.MaxValue);
+            Vector2Int maxPos = new Vector2Int(int.MinValue, int.MinValue);
+            
+            foreach (Room room in map.GetAllRooms())
+            {
+                minPos.x = Mathf.Min(minPos.x, room.Position.x);
+                minPos.y = Mathf.Min(minPos.y, room.Position.y);
+                maxPos.x = Mathf.Max(maxPos.x, room.Position.x);
+                maxPos.y = Mathf.Max(maxPos.y, room.Position.y);
+            }
+            
+            // 计算地图中心点（让地图以(0,0)为中心）
+            float centerX = (minPos.x + maxPos.x) / 2f;
+            float centerY = (minPos.y + maxPos.y) / 2f;
+            
+            // 计算地图实际大小并调整Content大小
+            float mapWidth = (maxPos.x - minPos.x + 1) * roomSpacing + roomNodeSize * 2;
+            float mapHeight = (maxPos.y - minPos.y + 1) * roomSpacing + roomNodeSize * 2;
+            
+            // 设置Content大小（添加边距）
+            float padding = 100f;
+            mapContainer.sizeDelta = new Vector2(
+                Mathf.Max(mapWidth + padding, 800f),
+                Mathf.Max(mapHeight + padding, 400f)
+            );
+
             foreach (Room room in map.GetAllRooms())
             {
                 // 创建房间节点
                 GameObject nodeObj = Instantiate(roomNodePrefab, mapContainer);
                 RectTransform nodeRect = nodeObj.GetComponent<RectTransform>();
                 
-                // 设置位置（基于房间的Position）
+                // 设置位置（相对于地图中心）
                 Vector2 position = new Vector2(
-                    room.Position.x * roomSpacing,
-                    -room.Position.y * roomSpacing
+                    (room.Position.x - centerX) * roomSpacing,
+                    -(room.Position.y - centerY) * roomSpacing
                 );
                 nodeRect.anchoredPosition = position;
                 nodeRect.sizeDelta = new Vector2(roomNodeSize, roomNodeSize);
@@ -279,29 +333,46 @@ namespace WanWanKan.UI
         /// </summary>
         private Color GetRoomColor(Room room, Room currentRoom, List<Room> accessibleRooms)
         {
-            if (room.Type == RoomType.Start)
-            {
-                return startRoomColor;
-            }
-            else if (room.Type == RoomType.Boss)
-            {
-                return bossRoomColor;
-            }
-            else if (currentRoom != null && room.Id == currentRoom.Id)
+            // 当前房间优先显示金色
+            if (currentRoom != null && room.Id == currentRoom.Id)
             {
                 return currentRoomColor;
             }
-            else if (accessibleRooms != null && accessibleRooms.Exists(r => r.Id == room.Id))
+            
+            // 可访问的房间显示浅黄色
+            if (accessibleRooms != null && accessibleRooms.Exists(r => r.Id == room.Id))
             {
                 return accessibleRoomColor;
             }
-            else if (room.IsVisited)
+            
+            // 已访问的房间显示灰色
+            if (room.IsVisited)
             {
                 return visitedRoomColor;
             }
-            else
+            
+            // 未访问的房间根据类型显示不同颜色
+            switch (room.Type)
             {
-                return unvisitedRoomColor;
+                case RoomType.Start:
+                    return startRoomColor;
+                case RoomType.Boss:
+                    return bossRoomColor;
+                case RoomType.Shop:
+                    return shopRoomColor;
+                case RoomType.Treasure:
+                    return treasureRoomColor;
+                case RoomType.Rest:
+                    return restRoomColor;
+                case RoomType.Event:
+                    return eventRoomColor;
+                case RoomType.Sacrifice:
+                    return sacrificeRoomColor;
+                case RoomType.Secret:
+                    return secretRoomColor;
+                case RoomType.Battle:
+                default:
+                    return unvisitedRoomColor;
             }
         }
 

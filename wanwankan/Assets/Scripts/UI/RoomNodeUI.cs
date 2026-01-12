@@ -24,6 +24,8 @@ namespace WanWanKan.UI
         [SerializeField] private Sprite shopIcon;
         [SerializeField] private Sprite restIcon;
         [SerializeField] private Sprite bossIcon;
+        [SerializeField] private Sprite sacrificeIcon;
+        [SerializeField] private Sprite secretIcon;
 
         private Room currentRoom;
 
@@ -103,6 +105,10 @@ namespace WanWanKan.UI
                     return "休息";
                 case RoomType.Boss:
                     return "BOSS";
+                case RoomType.Sacrifice:
+                    return "献祭";
+                case RoomType.Secret:
+                    return "隐藏";
                 default:
                     return "未知";
             }
@@ -129,6 +135,10 @@ namespace WanWanKan.UI
                     return restIcon;
                 case RoomType.Boss:
                     return bossIcon;
+                case RoomType.Sacrifice:
+                    return sacrificeIcon;
+                case RoomType.Secret:
+                    return secretIcon;
                 default:
                     return null;
             }

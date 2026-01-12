@@ -125,6 +125,9 @@ namespace WanWanKan.Editor
             // 创建地图面板
             GameObject mapPanel = CreateMapPanelInternal(mapUI.transform);
             
+            // 创建"打开地图"按钮
+            GameObject openMapButton = CreateOpenMapButtonInternal(mapUI.transform);
+            
             // 创建房间节点预制体
             GameObject roomNodePrefab = CreateRoomNodePrefabInternal();
             
@@ -140,6 +143,7 @@ namespace WanWanKan.Editor
             so.FindProperty("mapContainer").objectReferenceValue = mapPanel.transform.Find("MapContainer/Content")?.GetComponent<RectTransform>();
             so.FindProperty("roomNodePrefab").objectReferenceValue = roomNodePrefab;
             so.FindProperty("connectionLinePrefab").objectReferenceValue = connectionLinePrefab;
+            so.FindProperty("openMapButton").objectReferenceValue = openMapButton.GetComponent<Button>();
             so.ApplyModifiedProperties();
 
             // 保存预制体
@@ -148,7 +152,56 @@ namespace WanWanKan.Editor
             SavePrefab(connectionLinePrefab, "Assets/Prefabs/UI/ConnectionLine.prefab");
 
             Debug.Log("✅ 地图UI创建完成！预制体已保存到 Assets/Prefabs/UI/");
+            Debug.Log("📍 已创建[打开地图]按钮在右上角");
             Selection.activeGameObject = mapUI;
+        }
+
+        /// <summary>
+        /// 创建"打开地图"按钮
+        /// </summary>
+        private static GameObject CreateOpenMapButtonInternal(Transform parent)
+        {
+            // 按钮容器
+            GameObject buttonObj = new GameObject("OpenMapButton");
+            buttonObj.transform.SetParent(parent, false);
+            RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
+            
+            // 放在右上角
+            buttonRect.anchorMin = new Vector2(1, 1);
+            buttonRect.anchorMax = new Vector2(1, 1);
+            buttonRect.pivot = new Vector2(1, 1);
+            buttonRect.anchoredPosition = new Vector2(-20, -20);
+            buttonRect.sizeDelta = new Vector2(120, 50);
+
+            // 按钮背景
+            Image buttonImage = buttonObj.AddComponent<Image>();
+            buttonImage.color = new Color(0.2f, 0.4f, 0.6f, 0.9f);
+
+            // 添加Button组件
+            Button button = buttonObj.AddComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.normalColor = new Color(0.2f, 0.4f, 0.6f, 0.9f);
+            colors.highlightedColor = new Color(0.3f, 0.5f, 0.7f, 1f);
+            colors.pressedColor = new Color(0.15f, 0.3f, 0.5f, 1f);
+            button.colors = colors;
+
+            // 按钮文本
+            GameObject textObj = new GameObject("Text");
+            textObj.transform.SetParent(buttonObj.transform, false);
+            RectTransform textRect = textObj.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI buttonText = textObj.AddComponent<TextMeshProUGUI>();
+            SetChineseFont(buttonText);
+            buttonText.text = "🗺️ 地图";
+            buttonText.fontSize = 20;
+            buttonText.color = Color.white;
+            buttonText.alignment = TextAlignmentOptions.Center;
+
+            return buttonObj;
         }
 
         /// <summary>
@@ -245,33 +298,42 @@ namespace WanWanKan.Editor
             closeText.color = Color.white;
             closeText.alignment = TextAlignmentOptions.Center;
 
-            // 地图容器（可滚动）
+            // 地图容器（可滚动 + 可拖动）
             GameObject mapContainer = new GameObject("MapContainer");
             mapContainer.transform.SetParent(panel.transform, false);
             RectTransform mapContainerRect = mapContainer.AddComponent<RectTransform>();
             mapContainerRect.anchorMin = new Vector2(0, 0);
             mapContainerRect.anchorMax = new Vector2(1, 1);
-            mapContainerRect.offsetMin = new Vector2(20, 80);
-            mapContainerRect.offsetMax = new Vector2(-20, -20);
+            mapContainerRect.offsetMin = new Vector2(20, 20);
+            mapContainerRect.offsetMax = new Vector2(-20, -70);
 
-            // 添加ScrollRect
+            // 添加背景图片（RectMask2D需要）
+            Image containerBg = mapContainer.AddComponent<Image>();
+            containerBg.color = new Color(0.08f, 0.08f, 0.12f, 0.95f);
+
+            // 使用RectMask2D代替Mask（性能更好，不需要额外的Image）
+            mapContainer.AddComponent<UnityEngine.UI.RectMask2D>();
+
+            // 内容区域（直接放在MapContainer内）
+            GameObject content = new GameObject("Content");
+            content.transform.SetParent(mapContainer.transform, false);
+            RectTransform contentRect = content.AddComponent<RectTransform>();
+            // 初始大小，会根据地图动态调整
+            contentRect.sizeDelta = new Vector2(1200, 600);
+            contentRect.anchorMin = new Vector2(0.5f, 0.5f);
+            contentRect.anchorMax = new Vector2(0.5f, 0.5f);
+            contentRect.pivot = new Vector2(0.5f, 0.5f);
+            contentRect.anchoredPosition = Vector2.zero;
+
+            // 添加ScrollRect到容器
             ScrollRect scrollRect = mapContainer.AddComponent<ScrollRect>();
             scrollRect.horizontal = true;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Elastic;
-
-            // 内容区域
-            GameObject content = new GameObject("Content");
-            content.transform.SetParent(mapContainer.transform, false);
-            RectTransform contentRect = content.AddComponent<RectTransform>();
-            contentRect.sizeDelta = new Vector2(1000, 1000);
-            contentRect.anchorMin = new Vector2(0, 1);
-            contentRect.anchorMax = new Vector2(0, 1);
-            contentRect.pivot = new Vector2(0, 1);
-
-            Image contentBg = content.AddComponent<Image>();
-            contentBg.color = new Color(0.1f, 0.1f, 0.1f, 0.5f);
-
+            scrollRect.elasticity = 0.1f;
+            scrollRect.inertia = true;
+            scrollRect.decelerationRate = 0.135f;
+            scrollRect.scrollSensitivity = 10f;
             scrollRect.content = contentRect;
 
             return panel;

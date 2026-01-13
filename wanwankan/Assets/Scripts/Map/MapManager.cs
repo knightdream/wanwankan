@@ -21,11 +21,20 @@ namespace WanWanKan.Map
         public int CurrentFloor { get; private set; }
 
         [Header("地图生成配置")]
-        [SerializeField] private int minRoomsPerFloor = 5;
-        [SerializeField] private int maxRoomsPerFloor = 7;
+        [SerializeField] private int minRoomsPerFloor = 15;
+        [SerializeField] private int maxRoomsPerFloor = 22;
 
+        [Header("存档设置")]
+        [SerializeField] private bool autoSave = true;  // 自动保存
+        
         [Header("调试")]
         [SerializeField] private bool debugMode = false;
+
+        // 存档键名
+        private const string SAVE_KEY_FLOOR = "MapManager_CurrentFloor";
+        private const string SAVE_KEY_ROOM = "MapManager_CurrentRoomId";
+        private const string SAVE_KEY_SEED = "MapManager_MapSeed";
+        private const string SAVE_KEY_HAS_SAVE = "MapManager_HasSave";
 
         // 事件
         public System.Action<Room> OnRoomEntered;
@@ -47,11 +56,248 @@ namespace WanWanKan.Map
 
         private void Start()
         {
-            // 如果还没有生成地图，生成第一层
-            if (CurrentMap == null)
+            // 尝试加载存档，如果没有则生成新地图
+            if (!TryLoadGame())
             {
-                GenerateNewFloor(1);
+                StartNewGame();
             }
+        }
+
+        private void OnApplicationQuit()
+        {
+            // 退出时自动保存
+            if (autoSave)
+            {
+                SaveGame();
+            }
+        }
+
+        private void OnApplicationPause(bool pauseStatus)
+        {
+            // 暂停时自动保存（移动端）
+            if (pauseStatus && autoSave)
+            {
+                SaveGame();
+            }
+        }
+
+        /// <summary>
+        /// 开始新游戏
+        /// </summary>
+        public void StartNewGame()
+        {
+            // 清除存档
+            ClearSave();
+            
+            // 生成新地图
+            GenerateNewFloor(1);
+            
+            // 自动进入起点
+            EnterStartRoom();
+            
+            if (debugMode)
+            {
+                Debug.Log("[MapManager] 开始新游戏，进入起点");
+            }
+        }
+
+        /// <summary>
+        /// 进入起点房间
+        /// </summary>
+        public void EnterStartRoom()
+        {
+            if (CurrentMap == null) return;
+            
+            Room startRoom = CurrentMap.GetStartRoom();
+            if (startRoom != null)
+            {
+                CurrentMap.CurrentRoomId = startRoom.Id;
+                startRoom.IsVisited = true;
+                
+                if (debugMode)
+                {
+                    Debug.Log($"[MapManager] 进入起点房间: {startRoom}");
+                }
+                
+                OnRoomEntered?.Invoke(startRoom);
+            }
+        }
+
+        /// <summary>
+        /// 保存游戏
+        /// </summary>
+        public void SaveGame()
+        {
+            if (CurrentMap == null) return;
+            
+            PlayerPrefs.SetInt(SAVE_KEY_HAS_SAVE, 1);
+            PlayerPrefs.SetInt(SAVE_KEY_FLOOR, CurrentFloor);
+            PlayerPrefs.SetInt(SAVE_KEY_ROOM, CurrentMap.CurrentRoomId);
+            PlayerPrefs.SetInt(SAVE_KEY_SEED, CurrentMap.Seed);
+            
+            // 保存已访问和已完成的房间
+            SaveRoomStates();
+            
+            PlayerPrefs.Save();
+            
+            if (debugMode)
+            {
+                Debug.Log($"[MapManager] 游戏已保存 - 楼层:{CurrentFloor}, 房间:{CurrentMap.CurrentRoomId}");
+            }
+        }
+
+        /// <summary>
+        /// 尝试加载游戏
+        /// </summary>
+        public bool TryLoadGame()
+        {
+            if (PlayerPrefs.GetInt(SAVE_KEY_HAS_SAVE, 0) == 0)
+            {
+                return false;
+            }
+            
+            int savedFloor = PlayerPrefs.GetInt(SAVE_KEY_FLOOR, 1);
+            int savedRoomId = PlayerPrefs.GetInt(SAVE_KEY_ROOM, -1);
+            int savedSeed = PlayerPrefs.GetInt(SAVE_KEY_SEED, 0);
+            
+            // 使用相同的种子重新生成地图
+            CurrentFloor = savedFloor;
+            Random.InitState(savedSeed);
+            CurrentMap = MapGenerator.GenerateMap(savedFloor, minRoomsPerFloor, maxRoomsPerFloor);
+            CurrentMap.Seed = savedSeed;
+            
+            // 恢复房间状态
+            LoadRoomStates();
+            
+            // 恢复当前房间
+            if (savedRoomId >= 0 && CurrentMap.GetRoom(savedRoomId) != null)
+            {
+                CurrentMap.CurrentRoomId = savedRoomId;
+            }
+            else
+            {
+                // 如果保存的房间无效，进入起点
+                EnterStartRoom();
+            }
+            
+            if (debugMode)
+            {
+                Debug.Log($"[MapManager] 游戏已加载 - 楼层:{CurrentFloor}, 房间:{CurrentMap.CurrentRoomId}");
+            }
+            
+            OnMapGenerated?.Invoke(CurrentMap);
+            
+            Room currentRoom = CurrentMap.GetCurrentRoom();
+            if (currentRoom != null)
+            {
+                OnRoomEntered?.Invoke(currentRoom);
+            }
+            
+            return true;
+        }
+
+        /// <summary>
+        /// 保存房间状态
+        /// </summary>
+        private void SaveRoomStates()
+        {
+            if (CurrentMap == null) return;
+            
+            string visitedRooms = "";
+            string completedRooms = "";
+            
+            foreach (Room room in CurrentMap.GetAllRooms())
+            {
+                if (room.IsVisited)
+                {
+                    visitedRooms += room.Id + ",";
+                }
+                if (room.IsCompleted)
+                {
+                    completedRooms += room.Id + ",";
+                }
+            }
+            
+            PlayerPrefs.SetString($"MapManager_Visited_{CurrentFloor}", visitedRooms);
+            PlayerPrefs.SetString($"MapManager_Completed_{CurrentFloor}", completedRooms);
+        }
+
+        /// <summary>
+        /// 加载房间状态
+        /// </summary>
+        private void LoadRoomStates()
+        {
+            if (CurrentMap == null) return;
+            
+            string visitedRooms = PlayerPrefs.GetString($"MapManager_Visited_{CurrentFloor}", "");
+            string completedRooms = PlayerPrefs.GetString($"MapManager_Completed_{CurrentFloor}", "");
+            
+            // 恢复已访问状态
+            if (!string.IsNullOrEmpty(visitedRooms))
+            {
+                string[] visitedIds = visitedRooms.Split(',');
+                foreach (string idStr in visitedIds)
+                {
+                    if (int.TryParse(idStr, out int roomId))
+                    {
+                        Room room = CurrentMap.GetRoom(roomId);
+                        if (room != null)
+                        {
+                            room.IsVisited = true;
+                        }
+                    }
+                }
+            }
+            
+            // 恢复已完成状态
+            if (!string.IsNullOrEmpty(completedRooms))
+            {
+                string[] completedIds = completedRooms.Split(',');
+                foreach (string idStr in completedIds)
+                {
+                    if (int.TryParse(idStr, out int roomId))
+                    {
+                        Room room = CurrentMap.GetRoom(roomId);
+                        if (room != null)
+                        {
+                            room.IsCompleted = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 清除存档
+        /// </summary>
+        public void ClearSave()
+        {
+            PlayerPrefs.DeleteKey(SAVE_KEY_HAS_SAVE);
+            PlayerPrefs.DeleteKey(SAVE_KEY_FLOOR);
+            PlayerPrefs.DeleteKey(SAVE_KEY_ROOM);
+            PlayerPrefs.DeleteKey(SAVE_KEY_SEED);
+            
+            // 清除所有楼层的房间状态
+            for (int i = 1; i <= 10; i++)
+            {
+                PlayerPrefs.DeleteKey($"MapManager_Visited_{i}");
+                PlayerPrefs.DeleteKey($"MapManager_Completed_{i}");
+            }
+            
+            PlayerPrefs.Save();
+            
+            if (debugMode)
+            {
+                Debug.Log("[MapManager] 存档已清除");
+            }
+        }
+
+        /// <summary>
+        /// 检查是否有存档
+        /// </summary>
+        public bool HasSave()
+        {
+            return PlayerPrefs.GetInt(SAVE_KEY_HAS_SAVE, 0) == 1;
         }
 
         /// <summary>
@@ -60,11 +306,17 @@ namespace WanWanKan.Map
         public void GenerateNewFloor(int floorNumber)
         {
             CurrentFloor = floorNumber;
+            
+            // 生成随机种子并保存
+            int seed = System.Environment.TickCount;
+            Random.InitState(seed);
+            
             CurrentMap = MapGenerator.GenerateMap(floorNumber, minRoomsPerFloor, maxRoomsPerFloor);
+            CurrentMap.Seed = seed;
             
             if (debugMode)
             {
-                Debug.Log($"[MapManager] 生成第 {floorNumber} 层地图，共 {CurrentMap.RoomCount} 个房间");
+                Debug.Log($"[MapManager] 生成第 {floorNumber} 层地图，共 {CurrentMap.RoomCount} 个房间，种子:{seed}");
                 PrintMapLayout();
             }
             
@@ -98,6 +350,12 @@ namespace WanWanKan.Map
             if (debugMode)
             {
                 Debug.Log($"[MapManager] 进入房间: {room}");
+            }
+
+            // 自动保存
+            if (autoSave)
+            {
+                SaveGame();
             }
 
             OnRoomEntered?.Invoke(room);

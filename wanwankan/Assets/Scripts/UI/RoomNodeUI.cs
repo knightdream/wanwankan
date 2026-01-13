@@ -15,6 +15,8 @@ namespace WanWanKan.UI
         [SerializeField] private Image roomBackground;
         [SerializeField] private TextMeshProUGUI roomNameText;
         [SerializeField] private GameObject highlightEffect;
+        [SerializeField] private GameObject currentIndicator;  // 当前位置指示器
+        [SerializeField] private TextMeshProUGUI currentLabel; // "你在这里"文字
 
         [Header("房间图标")]
         [SerializeField] private Sprite startIcon;
@@ -27,7 +29,35 @@ namespace WanWanKan.UI
         [SerializeField] private Sprite sacrificeIcon;
         [SerializeField] private Sprite secretIcon;
 
+        [Header("动画设置")]
+        [SerializeField] private float pulseSpeed = 2f;
+        [SerializeField] private float pulseMinScale = 0.9f;
+        [SerializeField] private float pulseMaxScale = 1.1f;
+
         private Room currentRoom;
+        private bool isCurrentRoom = false;
+        private RectTransform rectTransform;
+        private Vector3 originalScale;
+
+        private void Awake()
+        {
+            rectTransform = GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                originalScale = rectTransform.localScale;
+            }
+        }
+
+        private void Update()
+        {
+            // 当前房间脉冲动画
+            if (isCurrentRoom && rectTransform != null)
+            {
+                float pulse = Mathf.Lerp(pulseMinScale, pulseMaxScale, 
+                    (Mathf.Sin(Time.time * pulseSpeed) + 1f) / 2f);
+                rectTransform.localScale = originalScale * pulse;
+            }
+        }
 
         /// <summary>
         /// 设置房间数据
@@ -50,13 +80,34 @@ namespace WanWanKan.UI
         }
 
         /// <summary>
-        /// 设置高亮状态
+        /// 设置高亮状态（当前房间）
         /// </summary>
         public void SetHighlighted(bool highlighted)
         {
+            isCurrentRoom = highlighted;
+            
+            // 高亮效果
             if (highlightEffect != null)
             {
                 highlightEffect.SetActive(highlighted);
+            }
+            
+            // 当前位置指示器
+            if (currentIndicator != null)
+            {
+                currentIndicator.SetActive(highlighted);
+            }
+            
+            // "你在这里"文字
+            if (currentLabel != null)
+            {
+                currentLabel.gameObject.SetActive(highlighted);
+            }
+            
+            // 恢复原始缩放
+            if (!highlighted && rectTransform != null)
+            {
+                rectTransform.localScale = originalScale;
             }
         }
 

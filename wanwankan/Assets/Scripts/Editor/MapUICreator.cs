@@ -404,6 +404,35 @@ namespace WanWanKan.Editor
             nameText.color = Color.white;
             nameText.alignment = TextAlignmentOptions.Center;
 
+            // 当前位置指示器（箭头）
+            GameObject indicatorObj = new GameObject("CurrentIndicator");
+            indicatorObj.transform.SetParent(node.transform, false);
+            RectTransform indicatorRect = indicatorObj.AddComponent<RectTransform>();
+            indicatorRect.anchorMin = new Vector2(0.5f, 1);
+            indicatorRect.anchorMax = new Vector2(0.5f, 1);
+            indicatorRect.sizeDelta = new Vector2(20, 20);
+            indicatorRect.anchoredPosition = new Vector2(0, 15);
+            Image indicatorImage = indicatorObj.AddComponent<Image>();
+            indicatorImage.color = new Color(1f, 0.9f, 0.2f); // 金黄色
+            indicatorObj.SetActive(false);
+
+            // "你在这里"文字
+            GameObject labelObj = new GameObject("CurrentLabel");
+            labelObj.transform.SetParent(node.transform, false);
+            RectTransform labelRect = labelObj.AddComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0.5f, 1);
+            labelRect.anchorMax = new Vector2(0.5f, 1);
+            labelRect.sizeDelta = new Vector2(80, 25);
+            labelRect.anchoredPosition = new Vector2(0, 40);
+            TextMeshProUGUI labelText = labelObj.AddComponent<TextMeshProUGUI>();
+            SetChineseFont(labelText);
+            labelText.text = "▼ 你在这里";
+            labelText.fontSize = 11;
+            labelText.color = new Color(1f, 0.9f, 0.2f); // 金黄色
+            labelText.alignment = TextAlignmentOptions.Center;
+            labelText.fontStyle = FontStyles.Bold;
+            labelObj.SetActive(false);
+
             // 添加RoomNodeUI组件
             var roomNodeUI = node.AddComponent<UI.RoomNodeUI>();
             SerializedObject so = new SerializedObject(roomNodeUI);
@@ -411,6 +440,8 @@ namespace WanWanKan.Editor
             so.FindProperty("roomBackground").objectReferenceValue = bgImage;
             so.FindProperty("roomNameText").objectReferenceValue = nameText;
             so.FindProperty("highlightEffect").objectReferenceValue = highlightObj;
+            so.FindProperty("currentIndicator").objectReferenceValue = indicatorObj;
+            so.FindProperty("currentLabel").objectReferenceValue = labelText;
             so.ApplyModifiedProperties();
 
             return node;

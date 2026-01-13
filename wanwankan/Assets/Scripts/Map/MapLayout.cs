@@ -35,6 +35,11 @@ namespace WanWanKan.Map
         public int CurrentRoomId { get; set; }
         
         /// <summary>
+        /// 地图生成种子（用于存档恢复）
+        /// </summary>
+        public int Seed { get; set; }
+        
+        /// <summary>
         /// 房间数量
         /// </summary>
         public int RoomCount => Rooms.Count;

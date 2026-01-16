@@ -112,7 +112,7 @@ namespace WanWanKan.Map
             return GetRoom(BossRoomId);
         }
 
-        /// <summary>
+        /// <summary>                   
         /// 获取可访问的相邻房间列表
         /// </summary>
         public List<Room> GetAccessibleRooms(int roomId)

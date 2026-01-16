@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WanWanKan.Editor", "WanWanKan.Editor.csproj", "{02d050bc-397c-b495-fcee-0202ec5a5bb2}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WanWanKan", "WanWanKan.csproj", "{0f76bb82-22fa-7278-93cb-d97e800632bf}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WanWanKan.Editor", "WanWanKan.Editor.csproj", "{02d050bc-397c-b495-fcee-0202ec5a5bb2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{721e1870-7348-5f4c-11b1-aeb3b5a5ee49}"
 EndProject
@@ -12,10 +12,10 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{02d050bc-397c-b495-fcee-0202ec5a5bb2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{02d050bc-397c-b495-fcee-0202ec5a5bb2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0f76bb82-22fa-7278-93cb-d97e800632bf}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0f76bb82-22fa-7278-93cb-d97e800632bf}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02d050bc-397c-b495-fcee-0202ec5a5bb2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02d050bc-397c-b495-fcee-0202ec5a5bb2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{721e1870-7348-5f4c-11b1-aeb3b5a5ee49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{721e1870-7348-5f4c-11b1-aeb3b5a5ee49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection

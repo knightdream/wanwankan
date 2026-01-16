@@ -1,0 +1,110 @@
+{
+    "dialogueId": "sample_dialogue_001",
+    "title": "示例对话 - 咖啡店邂逅",
+    "defaultTypewriterEffect": true,
+    "defaultTypewriterSpeed": 0.05,
+    "defaultCanSkipTypewriter": true,
+    "backgroundImage": "",
+    "bgmName": "",
+    "dialogues": [
+        {
+            "id": 1,
+            "speakerName": "丁曼大师",
+            "content": "所以，为了防止店里的咖啡豆遭遇令人叹息的命运，我得好好地研磨它们...",
+            "position": "right",
+            "leftCharacterImage": "girl_police",
+            "rightCharacterImage": "robot_barista",
+            "highlightLeft": false,
+            "highlightRight": true,
+            "typewriterEffect": true,
+            "typewriterSpeed": 0.04,
+            "canSkipTypewriter": true,
+            "autoPlay": false,
+            "autoPlayDelay": 0,
+            "triggerEvent": "",
+            "choices": []
+        },
+        {
+            "id": 2,
+            "speakerName": "安比",
+            "content": "参与活动一事，请恕我拒绝，失陪了。",
+            "position": "left",
+            "leftCharacterImage": "girl_police",
+            "rightCharacterImage": "robot_barista",
+            "highlightLeft": true,
+            "highlightRight": false,
+            "typewriterEffect": true,
+            "typewriterSpeed": 0.04,
+            "canSkipTypewriter": true,
+            "autoPlay": false,
+            "autoPlayDelay": 0,
+            "triggerEvent": "",
+            "choices": []
+        },
+        {
+            "id": 3,
+            "speakerName": "丁曼大师",
+            "content": "等等！你还没有尝试过我的特调咖啡呢！",
+            "position": "right",
+            "leftCharacterImage": "girl_police",
+            "rightCharacterImage": "robot_barista",
+            "highlightLeft": false,
+            "highlightRight": true,
+            "typewriterEffect": true,
+            "typewriterSpeed": 0.04,
+            "canSkipTypewriter": true,
+            "autoPlay": false,
+            "autoPlayDelay": 0,
+            "triggerEvent": "",
+            "choices": [
+                {
+                    "text": "好吧，来一杯试试",
+                    "nextDialogueId": 4,
+                    "triggerEvent": "accept_coffee",
+                    "moralityChange": 5
+                },
+                {
+                    "text": "我真的没时间了",
+                    "nextDialogueId": 5,
+                    "triggerEvent": "reject_coffee",
+                    "moralityChange": -5
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "speakerName": "安比",
+            "content": "...好吧，就一杯。",
+            "position": "left",
+            "leftCharacterImage": "girl_police",
+            "rightCharacterImage": "robot_barista",
+            "highlightLeft": true,
+            "highlightRight": false,
+            "typewriterEffect": true,
+            "typewriterSpeed": 0.04,
+            "canSkipTypewriter": true,
+            "autoPlay": false,
+            "autoPlayDelay": 0,
+            "triggerEvent": "",
+            "choices": []
+        },
+        {
+            "id": 5,
+            "speakerName": "安比",
+            "content": "抱歉，下次再说吧。",
+            "position": "left",
+            "leftCharacterImage": "girl_police",
+            "rightCharacterImage": "robot_barista",
+            "highlightLeft": true,
+            "highlightRight": false,
+            "typewriterEffect": true,
+            "typewriterSpeed": 0.04,
+            "canSkipTypewriter": true,
+            "autoPlay": false,
+            "autoPlayDelay": 0,
+            "triggerEvent": "",
+            "choices": []
+        }
+    ],
+    "onCompleteEvent": "dialogue_complete"
+}

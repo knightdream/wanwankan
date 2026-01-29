@@ -94,6 +94,12 @@ namespace WanWanKan.UI
                 boundUnit.OnActionGaugeChanged -= OnGaugeChanged;
                 boundUnit.Stats.OnHPChanged -= OnHPChanged;
                 boundUnit.Stats.OnDeath -= OnUnitDeath;
+                
+                // 取消注册视觉特效
+                if (CombatVisualEffects.Instance != null)
+                {
+                    CombatVisualEffects.Instance.UnregisterUnitUI(boundUnit);
+                }
             }
 
             boundUnit = unit;
@@ -124,6 +130,14 @@ namespace WanWanKan.UI
                 
                 // 确保CanvasGroup存在
                 EnsureCanvasGroup();
+                
+                // 注册到视觉特效系统
+                if (CombatVisualEffects.Instance != null)
+                {
+                    RectTransform rect = GetComponent<RectTransform>();
+                    Image image = GetComponent<Image>();
+                    CombatVisualEffects.Instance.RegisterUnitUI(unit, rect, image);
+                }
             }
 
             gameObject.SetActive(unit != null);

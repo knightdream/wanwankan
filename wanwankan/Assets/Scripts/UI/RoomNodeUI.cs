@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using WanWanKan.Map;
+using WanWanKan.UI;
 
 namespace WanWanKan.UI
 {
@@ -45,6 +46,16 @@ namespace WanWanKan.UI
             if (rectTransform != null)
             {
                 originalScale = rectTransform.localScale;
+            }
+            
+            // 确保文本组件使用中文字体
+            if (roomNameText != null)
+            {
+                FontFixer.SetChineseFont(roomNameText);
+            }
+            if (currentLabel != null)
+            {
+                FontFixer.SetChineseFont(currentLabel);
             }
         }
 

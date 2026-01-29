@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u654C\u4EBA\u540D\u79F0\nHP: 20/20"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5cd28712dd40643b3a177a81b11d2eb2, type: 2}
+  m_sharedMaterial: {fileID: 3692047548253525741, guid: 5cd28712dd40643b3a177a81b11d2eb2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

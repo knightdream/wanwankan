@@ -176,22 +176,47 @@ namespace WanWanKan.Combat
             int attackRoll = DiceSystem.Instance.Roll1D20() + stats.GetStrengthModifier();
             int targetDefense = 10 + target.Stats.GetAgilityModifier(); // 基础防御10 + 敏捷修正
 
-            Debug.Log($"[Combat] {unitName} 攻击 {target.UnitName}: {attackRoll} vs {targetDefense}");
+            // 检查是否暴击（投出20）
+            bool isCritical = attackRoll >= 20;
+
+            Debug.Log($"[Combat] {unitName} 攻击 {target.UnitName}: {attackRoll} vs {targetDefense} {(isCritical ? "(暴击!)" : "")}");
+
+            // 播放攻击动画
+            if (CombatVisualEffects.Instance != null)
+            {
+                CombatVisualEffects.Instance.PlayAttackAnimation(this, target);
+            }
 
             if (attackRoll >= targetDefense)
             {
                 // 命中！计算伤害：1d6 + 力量修正 + 额外加成
                 int damage = DiceSystem.Instance.RollDamage(1, stats.GetStrengthModifier() + damageBonus);
+                if (isCritical)
+                {
+                    damage = Mathf.RoundToInt(damage * 1.5f); // 暴击1.5倍伤害
+                }
                 damage = Mathf.Max(1, damage); // 至少造成1点伤害
                 
                 int actualDamage = target.TakeDamage(damage, this);
                 OnDealDamage?.Invoke(target, actualDamage);
                 
-                Debug.Log($"[Combat] 命中！{unitName} 对 {target.UnitName} 造成 {actualDamage} 点伤害");
+                // 显示伤害数字和受击动画
+                if (CombatVisualEffects.Instance != null)
+                {
+                    CombatVisualEffects.Instance.ShowDamageNumber(target, actualDamage, isCritical, false);
+                    CombatVisualEffects.Instance.PlayHitAnimation(target, isCritical);
+                }
+                
+                Debug.Log($"[Combat] 命中！{unitName} 对 {target.UnitName} 造成 {actualDamage} 点伤害 {(isCritical ? "(暴击!)" : "")}");
                 return actualDamage;
             }
             else
             {
+                // 未命中，显示"Miss"
+                if (CombatVisualEffects.Instance != null)
+                {
+                    CombatVisualEffects.Instance.ShowDamageNumber(target, 0, false, false);
+                }
                 Debug.Log($"[Combat] 未命中！");
                 return 0;
             }
@@ -211,6 +236,11 @@ namespace WanWanKan.Combat
             if (!IsAlive)
             {
                 Debug.Log($"[Combat] {unitName} 被击败了！");
+                // 播放死亡动画
+                if (CombatVisualEffects.Instance != null)
+                {
+                    CombatVisualEffects.Instance.PlayDeathAnimation(this);
+                }
             }
             
             return actualDamage;

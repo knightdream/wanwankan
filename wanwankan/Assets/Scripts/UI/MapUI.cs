@@ -78,6 +78,9 @@ namespace WanWanKan.UI
         {
             mapManager = MapManager.Instance;
             
+            // 确保所有文本组件使用中文字体
+            FontFixer.FixFontsInGameObject(gameObject);
+            
             if (mapManager != null)
             {
                 // 订阅地图事件
@@ -164,6 +167,9 @@ namespace WanWanKan.UI
             // 更新楼层文本
             if (floorText != null)
             {
+                // 先设置字体，确保fallback配置正确
+                FontFixer.SetChineseFont(floorText);
+                // 然后设置文本内容
                 floorText.text = $"第 {mapManager.CurrentFloor} 层";
             }
 
